@@ -5,6 +5,7 @@ import android.content.Context;
 
 import com.facebook.stetho.Stetho;
 import com.frame.model.R;
+import com.frame.model.utils.util.Utils;
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.scwang.smartrefresh.layout.api.DefaultRefreshFooterCreator;
 import com.scwang.smartrefresh.layout.api.DefaultRefreshHeaderCreator;
@@ -29,6 +30,7 @@ public class MainApplication extends Application {
 
         initSmartRefresh();
         Stetho.initializeWithDefaults(this);                                                //初始化 Stetho
+        Utils.init(this);                                                                       //初始化utils工具
     }
 
     /**
@@ -54,7 +56,7 @@ public class MainApplication extends Application {
                 return new ClassicsFooter(context).setDrawableSize(20);
             }
         });
-        
+
     }
 
 

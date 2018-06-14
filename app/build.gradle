@@ -10,17 +10,48 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        flavorDimensions "versionCode"
     }
-    buildTypes {
+
+    //设置签名，debug运行也用正式签名 ,release 跳过v2验证
+    signingConfigs {
+        debug {
+            //storeFile file('E:/delin.jks')
+            //storePassword "xxx"
+            //keyAlias "key"
+            //keyPassword "xxx"
+        }
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            v1SigningEnabled false
+            v2SigningEnabled true
         }
     }
+
+    productFlavors {
+        productDebug {
+            buildConfigField 'String', 'HOST', '"debug"'
+            minSdkVersion 21
+            applicationId 'com.frame.model'
+            targetSdkVersion 27
+            testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+            versionCode 1
+            versionName '1.0'
+        }
+        productRelease {
+            buildConfigField 'String', 'HOST', '"release"'
+            minSdkVersion 21
+            applicationId 'com.frame.model'
+            targetSdkVersion 27
+            testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+            versionCode 1
+            versionName '1.0'
+        }
+    }
+
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
@@ -28,7 +59,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.android.support:design:25.0.0'
-
+    compile 'org.jetbrains:annotations-java5:15.0'
     //okhttp引用
     compile 'com.squareup.okhttp3:okhttp:3.9.0'
     //retrofit2引用
@@ -48,16 +79,13 @@ dependencies {
     //butterknife注解引用
     compile 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
-
     //Dagger android 2 引用
     implementation 'com.google.dagger:dagger-android:2.13'
     implementation 'com.google.dagger:dagger-android-support:2.13'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.13'
     annotationProcessor 'com.google.dagger:dagger-android-processor:2.13'
-
     //刷新
     compile 'com.scwang.smartrefresh:SmartRefreshLayout:1.1.0-alpha-7'
-
     //调试
     compile 'com.facebook.stetho:stetho:1.5.0'
 }
