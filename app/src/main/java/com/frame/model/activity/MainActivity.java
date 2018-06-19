@@ -7,11 +7,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.frame.model.BuildConfig;
 import com.frame.model.R;
 import com.frame.model.base.BaseActivity;
 import com.frame.model.utils.util.ToastUtils;
 import com.frame.model.widget.NetworkStateView;
+import com.github.chrisbanes.photoview.PhotoView;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class MainActivity extends BaseActivity {
 
@@ -37,6 +40,8 @@ public class MainActivity extends BaseActivity {
     Button button3;
     @BindView(R.id.button4)
     Button button4;
+    @BindView(R.id.imssssss)
+    PhotoView imssssss;
     /**
      * 主 变量
      */
@@ -185,6 +190,13 @@ public class MainActivity extends BaseActivity {
 
     @Override
     protected void afterCreate(Bundle savedInstanceState) {
+        imssssss.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                ToastUtils.showShort("onLongClick");
+                return true;
+            }
+        });
         textView = (TextView) findViewById(R.id.tv);
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -218,7 +230,7 @@ public class MainActivity extends BaseActivity {
                     public void run() {
                         showContentView();
                     }
-                },1000);
+                }, 1000);
             }
         });
 
@@ -231,7 +243,7 @@ public class MainActivity extends BaseActivity {
                     public void run() {
                         showContentView();
                     }
-                },1000);
+                }, 1000);
             }
         });
         button3.setOnClickListener(new View.OnClickListener() {
@@ -243,21 +255,23 @@ public class MainActivity extends BaseActivity {
                     public void run() {
                         showContentView();
                     }
-                },1000);
+                }, 1000);
             }
         });
         button4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showContentView();
+                Glide.with(mContext).load("http://pic40.nipic.com/20140412/11857649_170524977000_2.jpg").into(imssssss);
             }
         });
+
+
     }
 
     @Override
     public void onRefresh() {
         super.onRefresh();
-        ToastUtils.showShort(NetworkStateView.mCurrentState+"");
+        ToastUtils.showShort(NetworkStateView.mCurrentState + "");
     }
 
     @Override
