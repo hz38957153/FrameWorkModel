@@ -86,7 +86,7 @@ public class MainActivity extends BaseActivity {
             public void run() {
                 try {
                     // 创建Socket对象 & 指定服务端的IP 及 端口号
-                    socket = new Socket("192.168.1.172", 8989);
+                    socket = new Socket("192.168.11.210", 2346);
                     // 判断客户端和服务器是否连接成功
                     System.out.println(socket.isConnected());
                 } catch (IOException e) {
@@ -109,6 +109,10 @@ public class MainActivity extends BaseActivity {
             public void run() {
                 try {
                     // 步骤1：创建输入流对象InputStream
+                    if (socket == null){
+                        ToastUtils.showShort("socket null");
+                        return;
+                    }
                     is = socket.getInputStream();
                     // 步骤2：创建输入流读取器对象 并传入输入流对象
                     // 该对象作用：获取服务器返回的数据
@@ -190,6 +194,11 @@ public class MainActivity extends BaseActivity {
 
     @Override
     protected void afterCreate(Bundle savedInstanceState) {
+        initViewSocket();
+        readMsg();
+
+
+
         imssssss.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -211,7 +220,7 @@ public class MainActivity extends BaseActivity {
             public void handleMessage(Message msg) {
                 switch (msg.what) {
                     case 0:
-
+                        ToastUtils.showShort(response);
                         break;
                 }
             }
