@@ -1,5 +1,6 @@
 package com.frame.model.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -8,24 +9,38 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.dhh.rxlifecycle2.RxLifecycle;
+import com.dhh.websocket.Config;
+import com.dhh.websocket.RxWebSocket;
+import com.dhh.websocket.WebSocketInfo;
+import com.dhh.websocket.WebSocketSubscriber;
+import com.dhh.websocket.WebSocketSubscriber2;
 import com.frame.model.BuildConfig;
 import com.frame.model.R;
 import com.frame.model.base.BaseActivity;
+import com.frame.model.base.URLRoot;
+import com.frame.model.utils.util.LogUtils;
 import com.frame.model.utils.util.ToastUtils;
 import com.frame.model.widget.NetworkStateView;
 import com.github.chrisbanes.photoview.PhotoView;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
+import okhttp3.WebSocket;
+import okio.ByteString;
 
 public class MainActivity extends BaseActivity {
 
@@ -42,148 +57,37 @@ public class MainActivity extends BaseActivity {
     Button button4;
     @BindView(R.id.imssssss)
     PhotoView imssssss;
-    /**
-     * 主 变量
-     */
-    // 主线程Handler
-    // 用于将从服务器获取的消息显示出来
-    private Handler mMainHandler;
-    // Socket变量
-    private Socket socket;
-    // 线程池
-    // 为了方便展示,此处直接采用线程池进行线程管理,而没有一个个开线程
-    private ExecutorService mThreadPool;
-    /**
-     * 接收服务器消息 变量
-     */
-    // 输入流对象
-    InputStream is;
-    // 输入流读取器对象
-    InputStreamReader isr;
-    BufferedReader br;
-    // 接收服务器发送过来的消息
-    String response;
 
-    /**
-     * 发送消息到服务器 变量
-     */
-    // 输出流对象
-    OutputStream outputStream;
 
-    private String NET_STATE;
+    private void initConfig(){
+        //init config
+        Config config = new Config.Builder()
+                .setShowLog(true)           //show  log
+//                .setClient(yourClient)   //if you want to set your okhttpClient
+//                .setShowLog(true, "your logTag")
+//                .setReconnectInterval(2, TimeUnit.SECONDS)  //set reconnect interval
+//                .setSSLSocketFactory(yourSSlSocketFactory, yourX509TrustManager) // wss support
+                .build();
+        RxWebSocket.setConfig(config);
 
-    /**
-     * @author MrZ
-     * @time 2018/6/14  14:03
-     * @uptime 2018/6/14  14:03
-     * @describe 建立连接
-     */
-    private void initViewSocket() {
-        mThreadPool = Executors.newCachedThreadPool();
-        // 利用线程池直接开启一个线程 & 执行该线程
-        mThreadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // 创建Socket对象 & 指定服务端的IP 及 端口号
-                    socket = new Socket("192.168.11.210", 2346);
-                    // 判断客户端和服务器是否连接成功
-                    System.out.println(socket.isConnected());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    /**
-     * @author MrZ
-     * @time 2018/6/14  14:03
-     * @uptime 2018/6/14  14:03
-     * @describe 读取消息
-     */
-    private void readMsg() {
-        // 利用线程池直接开启一个线程 & 执行该线程
-        mThreadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // 步骤1：创建输入流对象InputStream
-                    if (socket == null){
-                        ToastUtils.showShort("socket null");
-                        return;
+        /**
+         *
+         *如果你想将String类型的text解析成具体的实体类，比如,
+         * 请使用 {@link  WebSocketSubscriber}，仅需要将泛型传入即可
+         */
+        RxWebSocket.get(URLRoot.BASE_STOCK)
+                .compose(RxLifecycle.with(this).<WebSocketInfo>bindToLifecycle())
+                .subscribe(new WebSocketSubscriber() {
+                    @Override
+                    protected void onMessage(@NonNull String text) {
+                        LogUtils.a("MainActivity", text);
                     }
-                    is = socket.getInputStream();
-                    // 步骤2：创建输入流读取器对象 并传入输入流对象
-                    // 该对象作用：获取服务器返回的数据
-                    isr = new InputStreamReader(is);
-                    br = new BufferedReader(isr);
-                    // 步骤3：通过输入流读取器对象 接收服务器发送过来的数据
-                    response = br.readLine();
-                    // 步骤4:通知主线程,将接收的消息显示到界面
-                    Message msg = Message.obtain();
-                    msg.what = 0;
-                    mMainHandler.sendMessage(msg);
+                });
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-
-    /**
-     * @author MrZ
-     * @time 2018/6/14  14:03
-     * @uptime 2018/6/14  14:03
-     * @describe 发送消息
-     */
-    private void sendMsg(final String msg) {
-        // 利用线程池直接开启一个线程 & 执行该线程
-        mThreadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // 步骤1：从Socket 获得输出流对象OutputStream
-                    // 该对象作用：发送数据
-                    outputStream = socket.getOutputStream();
-                    // 步骤2：写入需要发送的数据到输出流对象中
-                    outputStream.write((msg + "\n").getBytes("utf-8"));
-                    // 特别注意：数据的结尾加上换行符才可让服务器端的readline()停止阻塞
-                    // 步骤3：发送数据到服务端
-                    outputStream.flush();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        });
-    }
-
-    /**
-     * @author MrZ
-     * @time 2018/6/14  14:04
-     * @uptime 2018/6/14  14:04
-     * @describe 关闭连接
-     */
-    private boolean clostConn() {
-        try {
-            // 断开 客户端发送到服务器 的连接，即关闭输出流对象OutputStream
-            outputStream.close();
-
-            // 断开 服务器发送到客户端 的连接，即关闭输入流读取器对象BufferedReader
-            br.close();
-
-            // 最终关闭整个Socket连接
-            socket.close();
-
-            // 判断客户端和服务器是否已经断开连接
-            System.out.println(socket.isConnected());
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+        //注销
+        Disposable disposable = RxWebSocket.get("ws://sdfs").subscribe();
+        if (disposable != null && !disposable.isDisposed()) {
+            disposable.dispose();
         }
     }
 
@@ -194,10 +98,10 @@ public class MainActivity extends BaseActivity {
 
     @Override
     protected void afterCreate(Bundle savedInstanceState) {
-        initViewSocket();
-        readMsg();
 
 
+        initView();
+        initConfig();
 
         imssssss.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -213,33 +117,22 @@ public class MainActivity extends BaseActivity {
                 ToastUtils.showShort(BuildConfig.HOST);
             }
         });
-
-        // 实例化主线程,用于更新接收过来的消息
-        mMainHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                switch (msg.what) {
-                    case 0:
-                        ToastUtils.showShort(response);
-                        break;
-                }
-            }
-        };
-        initView();
     }
-
+    int ii = 0;
     @Override
     protected void initView() {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showLoadingView();
+                /*showLoadingView();
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         showContentView();
                     }
-                }, 1000);
+                }, 1000);*/
+
+                startActivity(new Intent(MainActivity.this,CardViewActivity.class));
             }
         });
 
@@ -267,10 +160,12 @@ public class MainActivity extends BaseActivity {
                 }, 1000);
             }
         });
+
         button4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Glide.with(mContext).load("http://pic40.nipic.com/20140412/11857649_170524977000_2.jpg").into(imssssss);
+                //Glide.with(mContext).load("http://pic40.nipic.com/20140412/11857649_170524977000_2.jpg").into(imssssss);
+                RxWebSocket.send(URLRoot.BASE_STOCK,"sendMessage" + ++ii);
             }
         });
 
