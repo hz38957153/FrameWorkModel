@@ -84,11 +84,7 @@ public class MainActivity extends BaseActivity {
                     }
                 });
 
-        //注销
-        Disposable disposable = RxWebSocket.get("ws://sdfs").subscribe();
-        if (disposable != null && !disposable.isDisposed()) {
-            disposable.dispose();
-        }
+
     }
 
     @Override
@@ -165,7 +161,8 @@ public class MainActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 //Glide.with(mContext).load("http://pic40.nipic.com/20140412/11857649_170524977000_2.jpg").into(imssssss);
-                RxWebSocket.send(URLRoot.BASE_STOCK,"sendMessage" + ++ii);
+                //RxWebSocket.send(URLRoot.BASE_STOCK,"sendMessage" + ++ii);
+                startActivity(new Intent(MainActivity.this,ChatActivity.class));
             }
         });
 

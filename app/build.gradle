@@ -80,6 +80,8 @@ dependencies {
     //butterknife注解引用
     compile 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+
+    compile files('libs/json-lib-2.4-jdk15.jar')
     //刷新
     compile 'com.scwang.smartrefresh:SmartRefreshLayout:1.1.0-alpha-7'
     //调试
@@ -91,4 +93,6 @@ dependencies {
     //socket
     implementation  'com.dhh:websocket2:2.1.2'
     compile 'com.dhh:rxlifecycle2:1.5'
+    //BaseRecyclerViewAdapterHelper
+    compile 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.40'
 }

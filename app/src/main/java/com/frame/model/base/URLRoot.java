@@ -10,5 +10,5 @@ package com.frame.model.base;
 public final class URLRoot {
 
     public static final String BASE_API = "";
-    public static final String BASE_STOCK="ws://192.168.11.235:2346";
+    public static final String BASE_STOCK="ws://192.168.10.12:8282";
 }
