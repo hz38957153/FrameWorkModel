@@ -59,34 +59,6 @@ public class MainActivity extends BaseActivity {
     PhotoView imssssss;
 
 
-    private void initConfig(){
-        //init config
-        Config config = new Config.Builder()
-                .setShowLog(true)           //show  log
-//                .setClient(yourClient)   //if you want to set your okhttpClient
-//                .setShowLog(true, "your logTag")
-//                .setReconnectInterval(2, TimeUnit.SECONDS)  //set reconnect interval
-//                .setSSLSocketFactory(yourSSlSocketFactory, yourX509TrustManager) // wss support
-                .build();
-        RxWebSocket.setConfig(config);
-
-        /**
-         *
-         *如果你想将String类型的text解析成具体的实体类，比如,
-         * 请使用 {@link  WebSocketSubscriber}，仅需要将泛型传入即可
-         */
-        RxWebSocket.get(URLRoot.BASE_STOCK)
-                .compose(RxLifecycle.with(this).<WebSocketInfo>bindToLifecycle())
-                .subscribe(new WebSocketSubscriber() {
-                    @Override
-                    protected void onMessage(@NonNull String text) {
-                        LogUtils.a("MainActivity", text);
-                    }
-                });
-
-
-    }
-
     @Override
     protected int getLayoutId() {
         return R.layout.activity_main;
@@ -97,7 +69,6 @@ public class MainActivity extends BaseActivity {
 
 
         initView();
-        initConfig();
 
         imssssss.setOnLongClickListener(new View.OnLongClickListener() {
             @Override

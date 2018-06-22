@@ -29,7 +29,7 @@ public class BaseData {
     private String UIcon;
 
     public int getUid() {
-        return Uid;
+        return 2022;
     }
 
     public void setUid(int uid) {

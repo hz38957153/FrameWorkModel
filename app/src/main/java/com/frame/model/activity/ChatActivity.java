@@ -46,7 +46,6 @@ public class ChatActivity extends BaseActivity {
     @BindView(R.id.recycler_list)
     RecyclerView recyclerList;
 
-
     ChatAdapter adapter;
     int i = 0;
     @Override
@@ -56,8 +55,8 @@ public class ChatActivity extends BaseActivity {
 
     @Override
     protected void afterCreate(Bundle savedInstanceState) {
-        initView();
-        //initData();
+        //initView();
+        initData();
     }
 
     @Override
@@ -149,7 +148,7 @@ public class ChatActivity extends BaseActivity {
     @Override
     protected void initData() {
         Chats.joinChat("asd",this);
-        Chats.msgListener(new Chats.ServerListener() {
+        Chats.msgListener(new Chats.ChatListener() {
             @Override
             public void onOpen(WebSocket webSocket) {
                 LogUtils.a("ChatActivity",true);
@@ -189,7 +188,7 @@ public class ChatActivity extends BaseActivity {
             disposable.dispose();
         }*/
 
-        Chats.logout();
+        //Chats.logout();
     }
 
     @OnClick({ R.id.btn_send, R.id.recycler_list})
@@ -201,23 +200,7 @@ public class ChatActivity extends BaseActivity {
                     return;
                 }
 
-                MessageBean messageBean = new MessageBean();
-                MessageBean.RequestBean requestBean = new MessageBean.RequestBean();
-                requestBean.setGroup("1");
-                requestBean.setUser_id("2022");
-                requestBean.setMessage(editText.getText().toString().trim());
-                messageBean.setType("send_message");
-                messageBean.setRequest(requestBean);
-                Gson gson =new Gson();
-                String message = gson.toJson(messageBean);
-               // String message = JSONObject.fromObject(messageBean).toString();
-                LogUtils.a(message);
-                RxWebSocket.send(URLRoot.BASE_STOCK,message);
-
-
-                //Chats.send(editText.getText().toString().trim());
-                editText.setText("");
-                //adapter.addData(editText.getText().toString().trim());
+                Chats.send(editText.getText().toString().trim());
                 break;
         }
     }

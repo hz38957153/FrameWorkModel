@@ -17,7 +17,11 @@ import com.google.gson.Gson;
 
 import net.sf.json.JSONObject;
 
+import java.util.concurrent.TimeUnit;
+
 import io.reactivex.disposables.Disposable;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 
@@ -34,17 +38,20 @@ public abstract class Chats extends WebSocketListener {
     private static String GET_LIST = "get_list";
     private static String PING = "ping";
 
-    private static ServerListener serverListener;
+    private static ChatListener chatListener;
     private static String roomId;
+    private static WebSocket webSocket;
 
     public static void joinChat(String id, Context mContext){
         roomId = id;
-        //init config
         Config config = new Config.Builder()
                 .setShowLog(true)           //show  log
-//                .setClient(yourClient)   //if you want to set your okhttpClient
+                .setClient(new OkHttpClient.Builder()
+                        .readTimeout(3,  TimeUnit.SECONDS)
+                        .retryOnConnectionFailure(true)
+                        .build())   //if you want to set your okhttpClient
 //                .setShowLog(true, "your logTag")
-//                .setReconnectInterval(2, TimeUnit.SECONDS)  //set reconnect interval
+                .setReconnectInterval(2, TimeUnit.SECONDS)  //set reconnect interval
 //                .setSSLSocketFactory(yourSSlSocketFactory, yourX509TrustManager) // wss support
                 .build();
         RxWebSocket.setConfig(config);
@@ -57,8 +64,10 @@ public abstract class Chats extends WebSocketListener {
                 .compose(RxLifecycle.with(mContext).<WebSocketInfo>bindToLifecycle())
                 .subscribe(new WebSocketSubscriber2<MessageResponseBean>() {
                     @Override
-                    protected void onOpen(WebSocket webSocket) {
-                        super.onOpen(webSocket);
+                    protected void onOpen(WebSocket web) {
+                        super.onOpen(web);
+                        webSocket = web;
+                        LogUtils.a("ChatActivity",true);
                         MessageBean messageBean = new MessageBean();
                         MessageBean.RequestBean requestBean = new MessageBean.RequestBean();
                         requestBean.setGroup("1");
@@ -68,23 +77,24 @@ public abstract class Chats extends WebSocketListener {
                         Gson gson =new Gson();
                         String message = gson.toJson(messageBean);
                         RxWebSocket.send(URLRoot.BASE_STOCK,message);
-                        if (serverListener != null){
-                            serverListener.onOpen(webSocket);
+                        if (chatListener != null){
+                            chatListener.onOpen(webSocket);
                         }
 
                     }
 
                     @Override
                     protected void onMessage(MessageResponseBean responseBean) {
+                        LogUtils.a("ChatActivity","onMessage");
                         if (responseBean != null){
                             if (responseBean.getType().equals(SEND_MESSAGE)){
                                 if (responseBean.getResponse() != null){
-                                    if (serverListener != null)
-                                    serverListener.onNewMessage(responseBean);
+                                    if (chatListener != null)
+                                        chatListener.onNewMessage(responseBean);
                                 }
                             }
                             else if(responseBean.getType().contains(PING)){
-                                RxWebSocket.send(URLRoot.BASE_STOCK, JSONObject.fromObject("{'type':'pong'}").toString());
+                                //RxWebSocket.send(URLRoot.BASE_STOCK, JSONObject.fromObject("{'type':'pong'}").toString());
                             }
                         }
 
@@ -93,32 +103,32 @@ public abstract class Chats extends WebSocketListener {
                     @Override
                     protected void onReconnect() {
                         super.onReconnect();
-                        if (serverListener != null)
-                        serverListener.onReconnect();
+                        if (chatListener != null)
+                            chatListener.onReconnect();
                     }
 
                     @Override
                     protected void onClose() {
                         super.onClose();
-                        if (serverListener != null)
-                        serverListener.onClose();
+                        if (chatListener != null)
+                            chatListener.onClose();
                     }
                 });
     }
 
-    public interface ServerListener {
+    public interface ChatListener {
         void onOpen(WebSocket webSocket);
         void onNewMessage(MessageResponseBean responseBean);
         void onReconnect();
         void onClose();
     }
 
-    public static void msgListener(ServerListener Listener){
-        serverListener = Listener;
+    public static void msgListener(ChatListener Listener){
+        chatListener = Listener;
     }
 
     public static void logout(){
-        serverListener = null;
+        chatListener = null;
         Disposable disposable = RxWebSocket.get("ws://sdfs").subscribe();
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
@@ -128,12 +138,13 @@ public abstract class Chats extends WebSocketListener {
     public static void send(String msg){
         MessageBean messageBean = new MessageBean();
         MessageBean.RequestBean requestBean = new MessageBean.RequestBean();
-        requestBean.setGroup(roomId);
-        requestBean.setUser_id(BaseData.getInstance().getUid()+"");
+        requestBean.setGroup("1");
+        requestBean.setUser_id("2022");
         requestBean.setMessage(msg);
         messageBean.setType(SEND_MESSAGE);
         messageBean.setRequest(requestBean);
-        RxWebSocket.send(URLRoot.BASE_STOCK,new Gson().toJson(messageBean));
+        if (webSocket != null)
+        webSocket.send(new Gson().toJson(messageBean));
         LogUtils.a("send");
 
     }
